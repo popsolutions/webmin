@@ -1,6 +1,7 @@
 #!/usr/local/bin/perl
 # Export the CSV
 
+use Encode;
 require './mysql-lib.pl';
 &ReadParse();
 &error_setup($text{'csv_err'});
@@ -28,20 +29,20 @@ $rv = &execute_sql($in{'db'}, $cmd);
 
 # Open the destination
 if (!$in{'dest'}) {
-	print "Content-type: text/plain\n\n";
-	$fh = STDOUT;
+	print "Content-type: text/plain; charset=utf-8\n\n";
+	$fh = *STDOUT;
 	}
 elsif ($access{'buser'} eq 'root') {
 	# Open target file directly
-	&open_tempfile(OUT, ">$in{'file'}");
-	$fh = OUT;
+        open(OUT, ">:utf-8", $in{'file'}) || &error("Failed to open file: $!");  
+	$fh = *OUT;
 	}
 else {
 	# Run through cat command
 	$cmd = &command_as_user($access{'buser'}, 0,
 				"cat >".&quote_path($in{'file'}));
 	&open_execute_command(OUT, $cmd, 0);
-	$fh = OUT;
+	$fh = *OUT;
 	}
 
 # Send the data
